@@ -45,11 +45,14 @@ if target_major != "All":
     filtered_data = 학번별_전공현황[학번별_전공현황['첫번째 주전공'] == target_major]
     second_major_distribution = filtered_data['두번째 주전공'].value_counts()
 
-    # 두 번째 주전공 분포 시각화 (원형 차트)
+    # 두 번째 주전공 분포 시각화 (Plotly 원형 차트)
     st.header(f"Second Major Distribution for {target_major}")
-    fig, ax = plt.subplots()
-    ax.pie(second_major_distribution, labels=second_major_distribution.index, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
-    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-    st.pyplot(fig)
+    fig = px.pie(
+        values=second_major_distribution.values,
+        names=second_major_distribution.index,
+        title=f"Second Major Distribution for {target_major}",
+        hole=0.4
+    )
+    st.plotly_chart(fig)
 else:
     st.write("Please select a major to see the distribution.")
