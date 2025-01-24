@@ -38,67 +38,6 @@ data_file_major_total = 'major_total.csv'
 # 앱 제목
 st.title("Indivi Major Data Analysis")
 
-# 데이터 미리보기
-st.header("Dataset Preview")
-st.write(data.head())
-
-# 데이터 요약 정보
-st.header("Data Overview")
-st.write("Number of Rows:", data.shape[0])
-st.write("Number of Columns:", data.shape[1])
-st.write("Columns:", list(data.columns))
-st.write("Missing Values:")
-st.write(data.isnull().sum())
-
-# 통계 정보
-st.header("Descriptive Statistics")
-st.write(data.describe())
-
-# 사용자 선택에 따른 데이터 시각화
-st.header("Data Visualization")
-columns = data.select_dtypes(include=['float64', 'int64']).columns
-if columns.any():
-    selected_column = st.selectbox("Select a numeric column to visualize:", columns)
-    
-    # 히스토그램
-    st.subheader(f"Histogram of {selected_column}")
-    fig, ax = plt.subplots()
-    data[selected_column].hist(ax=ax, bins=20, color='skyblue', edgecolor='black')
-    ax.set_title(f"Histogram of {selected_column}")
-    ax.set_xlabel(selected_column)
-    ax.set_ylabel("Frequency")
-    st.pyplot(fig)
-
-    # 박스플롯
-    st.subheader(f"Boxplot of {selected_column}")
-    fig, ax = plt.subplots()
-    ax.boxplot(data[selected_column].dropna(), vert=False)
-    ax.set_title(f"Boxplot of {selected_column}")
-    ax.set_xlabel(selected_column)
-    st.pyplot(fig)
-
-else:
-    st.write("No numeric columns found in the dataset for visualization.")
-
-# 사용자 필터링 기능
-st.header("Filter Data")
-for column in data.select_dtypes(include=['object']).columns:
-    unique_values = data[column].unique()
-    selected_value = st.selectbox(f"Filter by {column}", options=["All"] + list(unique_values))
-    if selected_value != "All":
-        data = data[data[column] == selected_value]
-
-st.write("Filtered Data:")
-st.write(data)
-
-# 학번별 첫 번째 및 두 번째 주전공 리스트 출력
-st.header("First and Second Major by 학번")
-st.write(학번별_전공현황)
-
-# 전체 전공현황 출력
-st.header("전체 전공현황")
-st.write(전체_전공현황)
-
 # 첫 번째 주전공을 필터로 선택
 target_major = st.selectbox("Select a Major from 전체 전공현황 to filter:", ["All"] + 전체_전공현황['전공'].tolist())
 
