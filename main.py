@@ -35,10 +35,6 @@ def load_major_total(file_path):
 data_file_major_total = 'major_total.csv'
 전체_전공현황 = load_major_total(data_file_major_total)
 
-# 첫 번째 주전공이 전체 전공현황에 존재하는 경우 두 번째 주전공 분포 확인
-valid_first_majors = 학번별_전공현황[학번별_전공현황['첫번째 주전공'].isin(전체_전공현황['전공'])]
-second_major_distribution = valid_first_majors['두번째 주전공'].value_counts()
-
 # 앱 제목
 st.title("Indivi Major Data Analysis")
 
@@ -103,9 +99,18 @@ st.write(학번별_전공현황)
 st.header("전체 전공현황")
 st.write(전체_전공현황)
 
-# 두 번째 주전공 분포 시각화 (원형 차트)
-st.header("Second Major Distribution")
-fig, ax = plt.subplots()
-ax.pie(second_major_distribution, labels=second_major_distribution.index, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
-ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-st.pyplot(fig)
+# 첫 번째 주전공을 필터로 선택
+target_major = st.selectbox("Select a Major from 전체 전공현황 to filter:", ["All"] + 전체_전공현황['전공'].tolist())
+
+if target_major != "All":
+    filtered_data = 학번별_전공현황[학번별_전공현황['첫번째 주전공'] == target_major]
+    second_major_distribution = filtered_data['두번째 주전공'].value_counts()
+
+    # 두 번째 주전공 분포 시각화 (원형 차트)
+    st.header(f"Second Major Distribution for {target_major}")
+    fig, ax = plt.subplots()
+    ax.pie(second_major_distribution, labels=second_major_distribution.index, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    st.pyplot(fig)
+else:
+    st.write("Please select a major to see the distribution.")
