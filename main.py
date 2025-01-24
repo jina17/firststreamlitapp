@@ -22,6 +22,10 @@ def second_occurrence(series):
 second_major = data.groupby('학번')['전공현황.3'].apply(second_occurrence).reset_index(name='전공현황.3')
 second_major_list = second_major['전공현황.3'].dropna().tolist()
 
+# 학번, 첫 번째 주전공, 두 번째 주전공 병합
+merged_data = first_major.rename(columns={'전공현황.3': '첫번째 주전공'})
+merged_data = pd.merge(merged_data, second_major.rename(columns={'전공현황.3': '두번째 주전공'}), on='학번', how='left')
+
 # 앱 제목
 st.title("Indivi Major Data Analysis")
 
@@ -78,12 +82,6 @@ for column in data.select_dtypes(include=['object']).columns:
 st.write("Filtered Data:")
 st.write(data)
 
-# 학번별 첫 번째 전공현황.3 리스트 출력
-st.header("First Major by 학번")
-st.write(first_major)
-st.write("First Major List:", first_major_list)
-
-# 학번별 두 번째 전공현황.3 리스트 출력
-st.header("Second Major by 학번")
-st.write(second_major)
-st.write("Second Major List:", second_major_list)
+# 학번별 첫 번째 및 두 번째 주전공 리스트 출력
+st.header("First and Second Major by 학번")
+st.write(merged_data)
