@@ -5,10 +5,22 @@ import matplotlib.pyplot as plt
 # 데이터 로드
 @st.cache_data
 def load_data(file_path):
-    return pd.read_csv(file_path)
+    data = pd.read_csv(file_path)
+    return data[['학번', '전공현황.1', '전공현황.2', '전공현황.3']]
 
 data_file = 'indivi_major.csv'
 data = load_data(data_file)
+
+# 학번별 첫 번째 전공현황.3 값 추출
+first_major = data.groupby('학번')['전공현황.3'].first().reset_index()
+first_major_list = first_major['전공현황.3'].tolist()
+
+# 학번별 두 번째 전공현황.3 값 추출
+def second_occurrence(series):
+    return series.dropna().iloc[1] if len(series.dropna()) > 1 else None
+
+second_major = data.groupby('학번')['전공현황.3'].apply(second_occurrence).reset_index(name='전공현황.3')
+second_major_list = second_major['전공현황.3'].dropna().tolist()
 
 # 앱 제목
 st.title("Indivi Major Data Analysis")
@@ -65,3 +77,13 @@ for column in data.select_dtypes(include=['object']).columns:
 
 st.write("Filtered Data:")
 st.write(data)
+
+# 학번별 첫 번째 전공현황.3 리스트 출력
+st.header("First Major by 학번")
+st.write(first_major)
+st.write("First Major List:", first_major_list)
+
+# 학번별 두 번째 전공현황.3 리스트 출력
+st.header("Second Major by 학번")
+st.write(second_major)
+st.write("Second Major List:", second_major_list)
