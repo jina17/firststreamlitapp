@@ -38,22 +38,6 @@ data_file_major_total = 'major_total.csv'
 # 앱 제목
 st.title("Indivi Major Data Analysis")
 
-# 데이터 미리보기
-st.header("Dataset Preview")
-st.write(data.head())
-
-# 데이터 요약 정보
-st.header("Data Overview")
-st.write("Number of Rows:", data.shape[0])
-st.write("Number of Columns:", data.shape[1])
-st.write("Columns:", list(data.columns))
-st.write("Missing Values:")
-st.write(data.isnull().sum())
-
-# 통계 정보
-st.header("Descriptive Statistics")
-st.write(data.describe())
-
 # 사용자 선택에 따른 데이터 시각화
 st.header("Data Visualization")
 columns = data.select_dtypes(include=['float64', 'int64']).columns
