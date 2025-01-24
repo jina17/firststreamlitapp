@@ -42,6 +42,9 @@ second_major_distribution = valid_first_majors['두번째 주전공'].value_coun
 # 앱 제목
 st.title("Indivi Major Data Analysis")
 
+# 첫 번째 주전공을 필터로 선택
+target_major = st.selectbox("Select a Major from 전체 전공현황 to filter:", ["All"] + 전체_전공현황['전공'].tolist())
+
 # 두 번째 주전공 분포 시각화 (원형 차트)
 st.header("Second Major Distribution")
 fig, ax = plt.subplots()
