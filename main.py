@@ -1,77 +1,55 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 
-# 설치된 폰트 확인 및 출력 (디버깅용)
-available_fonts = [f.name for f in fm.fontManager.ttflist]
-st.write("Available fonts:", available_fonts)
+# 데이터 로드
+@st.cache_data
+def load_data(file_path):
+    data = pd.read_csv(file_path)
+    return data[['학번', '전공현황.1', '전공현황.2', '전공현황.3']]
 
-# Mac 한글 폰트 설정 시도
-try:
-    plt.rcParams['font.family'] = ['Malgun Gothic', 'AppleGothic', 'Arial Unicode MS']
-    plt.rcParams['font.sans-serif'] = ['Malgun Gothic', 'AppleGothic', 'Arial Unicode MS']
-    plt.rcParams['axes.unicode_minus'] = False
-    
-    # 폰트 캐시 재생성
-    fm._rebuild()
-except:
-    st.error("한글 폰트 설정에 실패했습니다.")
+data_file = 'indivi_major.csv'
+data = load_data(data_file)
 
-def load_data():
-    # 데이터 로드
-    indivi_major = pd.read_csv("indivi_major.csv")
-    major_total = pd.read_csv("major_total.csv")
-    return indivi_major, major_total
+# 학번별 첫 번째 전공현황.3 값 추출
+first_major = data.groupby('학번')['전공현황.3'].first().reset_index()
+first_major_list = first_major['전공현황.3'].tolist()
 
-def plot_major_distribution(df, selected_major):
-    # 선택한 전공이 등장한 위치에 따라 나머지 전공들의 분포 확인
-    first_major_mask = df['첫번째 전공'] == selected_major
-    second_major_mask = df['두번째 전공'] == selected_major
-    third_major_mask = df['세번째 전공'] == selected_major
-    
-    distributions = {}
-    
-    if first_major_mask.sum() > 0:
-        distributions['첫번째 전공에서 등장'] = df.loc[first_major_mask, '두번째 전공'].value_counts()
-    if second_major_mask.sum() > 0:
-        distributions['두번째 전공에서 등장'] = df.loc[second_major_mask, '첫번째 전공'].value_counts()
-    if third_major_mask.sum() > 0:
-        distributions['세번째 전공에서 등장'] = df.loc[third_major_mask, '첫번째 전공'].value_counts()
-    
-    return distributions
+# 학번별 두 번째 전공현황.3 값 추출
+def second_occurrence(series):
+    return series.dropna().iloc[1] if len(series.dropna()) > 1 else None
 
-def main():
-    st.title("전공 분포 분석")
-    
-    # 데이터 로드
-    indivi_major, major_total = load_data()
-    
-    # 전공 선택
-    major_list = major_total['전공'].unique()
-    selected_major = st.selectbox("전공 선택", major_list)
-    
-    # 데이터 필터링 및 그래프 생성
-    distributions = plot_major_distribution(indivi_major, selected_major)
-    
-    for title, dist in distributions.items():
-        st.subheader(title)
-        # 그래프 생성 전에 한글 폰트 명시적 설정
-        with plt.style.context('default'):
-            fig, ax = plt.subplots(figsize=(10, 8))
-            wedges, texts, autotexts = ax.pie(dist, 
-                                            labels=dist.index, 
-                                            autopct='%1.1f%%', 
-                                            startangle=90)
-            
-            # 폰트 속성 직접 설정
-            font_prop = fm.FontProperties(family=['Malgun Gothic', 'AppleGothic', 'Arial Unicode MS'])
-            plt.setp(autotexts, size=8, fontproperties=font_prop)
-            plt.setp(texts, size=8, fontproperties=font_prop)
-            
-            ax.axis('equal')
-            st.pyplot(fig)
-            plt.close(fig)
+second_major = data.groupby('학번')['전공현황.3'].apply(second_occurrence).reset_index(name='전공현황.3')
+second_major_list = second_major['전공현황.3'].dropna().tolist()
 
-if __name__ == "__main__":
-    main()
+# 학번, 첫 번째 주전공, 두 번째 주전공 병합 및 명명
+학번별_전공현황 = first_major.rename(columns={'전공현황.3': '첫번째 주전공'})
+학번별_전공현황 = pd.merge(학번별_전공현황, second_major.rename(columns={'전공현황.3': '두번째 주전공'}), on='학번', how='left')
+
+# major_total.csv 파일에서 '전공' 열만 남기기
+@st.cache_data
+def load_major_total(file_path):
+    major_total_data = pd.read_csv(file_path)
+    return major_total_data[['전공']]
+
+data_file_major_total = 'major_total.csv'
+전체_전공현황 = load_major_total(data_file_major_total)
+
+# 앱 제목
+st.title("Indivi Major Data Analysis")
+
+# 첫 번째 주전공을 필터로 선택
+target_major = st.selectbox("Select a Major from 전체 전공현황 to filter:", ["All"] + 전체_전공현황['전공'].tolist())
+
+if target_major != "All":
+    filtered_data = 학번별_전공현황[학번별_전공현황['첫번째 주전공'] == target_major]
+    second_major_distribution = filtered_data['두번째 주전공'].value_counts()
+
+    # 두 번째 주전공 분포 시각화 (원형 차트)
+    st.header(f"Second Major Distribution for {target_major}")
+    fig, ax = plt.subplots()
+    ax.pie(second_major_distribution, labels=second_major_distribution.index, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    st.pyplot(fig)
+else:
+    st.write("Please select a major to see the distribution.")
